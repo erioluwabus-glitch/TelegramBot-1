@@ -1,32 +1,21 @@
 import logging
 import random
 import os
+import time
 from flask import Flask, request, jsonify
-from telegram import Update
+from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from threading import Thread
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-from threading import Thread
-import schedule
-import time
 import base64
+import schedule
 
 app = Flask(__name__)
 
 # Setup logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-@app.route('/', methods=['GET', 'POST'])
-def webhook():
-    if request.method == 'POST':
-        data = request.get_json(force=True)
-        logger.info(f"Received update from Telegram: {data}")
-        update = Update.de_json(data, application.bot)
-        application.process_update(update)
-        return "ok", 200
-    return "Bot is alive!", 200
-
 
 # Google Sheets setup
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
@@ -38,7 +27,7 @@ wins_sheet = client.open("VisionCourseSupport").worksheet("Wins")
 # Configuration
 TOKEN = os.environ.get('TOKEN', '8138720265:AAGvACO_aPmvcJDpY3ugyM3AV1cmZUJ4RTU')
 ADMIN_ID = os.environ.get('ADMIN_ID', '7109534825')
-GROUP_CHAT_ID = '-1003036481382'
+GROUP_CHAT_ID = os.environ.get('GROUP_CHAT_ID', '-1003036481382')
 VALID_MODULES = ['4', '7', '10']
 ENCOURAGEMENTS = ["Crushing it! 🚀", "Shining bright! 🌟", "On fire! 🔥", "Next-level! 💪"]
 
@@ -125,7 +114,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
       user = update.effective_user.username or str(update.effective_user.id)
       content_type = "Text" if update.message.text else "Video" if update.message.video else "Photo" if update.message.photo else "Link"
       content = update.message.text or "Media/Link"
-      encouragement = random.choice(["Crushing it! 🚀", "Shining bright! 🌟", "On fire! 🔥", "Next-level! 💪"])
+      encouragement = random.choice(ENCOURAGEMENTS)
       mode = context.user_data.get('mode', '')
       if mode == 'assignment':
           module = context.user_data.get('module', 'Unknown')
@@ -174,17 +163,12 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
   @app.route('/', methods=['GET', 'POST'])
   def webhook():
       if request.method == 'POST':
-          update = Update.de_json(request.get_json(force=True), application.bot)
+          data = request.get_json(force=True)
+          logger.info(f"Received update from Telegram: {data}")
+          update = Update.de_json(data, application.bot)
           application.process_update(update)
-          return jsonify({"status": "ok"})
+          return "ok", 200
       return "Bot is alive!", 200
-
-  # Starter webhook setup
-  @app.route('/set_webhook', methods=['GET'])
-  def set_webhook():
-      webhook_url = request.url_root
-      application.bot.set_webhook(url=webhook_url)
-      return f"Webhook set to {webhook_url}", 200
 
   # Reminder route for cron
   @app.route('/reminder', methods=['GET'])
@@ -198,11 +182,10 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
   application.add_handler(CommandHandler("remove", remove))
   application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
   application.add_handler(MessageHandler(filters.PHOTO | filters.VIDEO | filters.TEXT, handle_submission))
+  application.add_handler(CommandHandler("getmedia", get_media))
 
-  # Scheduler thread
   scheduler_thread = Thread(target=run_scheduler, args=(application,))
   scheduler_thread.start()
 
-  # Run Flask app
   if __name__ == '__main__':
       app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 3000)))
