@@ -17,6 +17,17 @@ app = Flask(__name__)
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+@app.route('/', methods=['GET', 'POST'])
+def webhook():
+    if request.method == 'POST':
+        data = request.get_json(force=True)
+        logger.info(f"Received update from Telegram: {data}")
+        update = Update.de_json(data, application.bot)
+        application.process_update(update)
+        return "ok", 200
+    return "Bot is alive!", 200
+
+
 # Google Sheets setup
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
 creds = ServiceAccountCredentials.from_json_keyfile_dict(base64.b64decode(os.environ.get('CREDENTIALS_JSON')), scope)
@@ -25,9 +36,9 @@ assignment_sheet = client.open("VisionCourseSupport").worksheet("Assignments")
 wins_sheet = client.open("VisionCourseSupport").worksheet("Wins")
 
 # Configuration
-TOKEN = os.environ.get('TOKEN', '8138720265:AAHtklkJUBfb8Z9haLJylvcNad56lWT-WiE')
-ADMIN_ID = os.environ.get('ADMIN_ID', '8282761440')
-GROUP_CHAT_ID = '-1003069423158'
+TOKEN = os.environ.get('TOKEN', '8138720265:AAGvACO_aPmvcJDpY3ugyM3AV1cmZUJ4RTU')
+ADMIN_ID = os.environ.get('ADMIN_ID', '7109534825')
+GROUP_CHAT_ID = '-1003036481382'
 VALID_MODULES = ['4', '7', '10']
 ENCOURAGEMENTS = ["Crushing it! 🚀", "Shining bright! 🌟", "On fire! 🔥", "Next-level! 💪"]
 
