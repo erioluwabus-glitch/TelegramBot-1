@@ -18,7 +18,8 @@ logger = logging.getLogger(__name__)
 
 # Google Sheets setup
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scope)
+import base64
+creds = ServiceAccountCredentials.from_json_keyfile_dict(base64.b64decode(os.environ.get('CREDENTIALS_JSON')), scope)
 client = gspread.authorize(creds)
 assignment_sheet = client.open("VisionCourseSupport").worksheet("Assignments")
 wins_sheet = client.open("VisionCourseSupport").worksheet("Wins")
