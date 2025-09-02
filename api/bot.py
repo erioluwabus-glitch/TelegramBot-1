@@ -24,9 +24,9 @@ assignment_sheet = client.open("VisionCourseSupport").worksheet("Assignments")
 wins_sheet = client.open("VisionCourseSupport").worksheet("Wins")
 
 # Configuration
-TOKEN = os.environ.get('TOKEN', '8138720265:AAHtklkJUBfb8Z9haLJylvcNad56lWT-WiE')
-ADMIN_ID = os.environ.get('ADMIN_ID', '8282761440')
-GROUP_CHAT_ID = os.environ.get('GROUP_CHAT_ID', '-1003069423158')
+TOKEN = os.environ.get('TOKEN', '8138720265:AAGvACO_aPmvcJDpY3ugyM3AV1cmZUJ4RTU')
+ADMIN_ID = os.environ.get('ADMIN_ID', ' 7109534825')
+GROUP_CHAT_ID = os.environ.get('GROUP_CHAT_ID', ' -1003036481382')
 
 # Initialize Application
 application = Application.builder().token(TOKEN).build()
